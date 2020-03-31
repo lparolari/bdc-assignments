@@ -47,3 +47,8 @@ task example (type:JavaExec) {
     main = "it.unipd.bdc.ay2019.group49.examples.TemplateHW1"
     classpath = sourceSets.main.runtimeClasspath
 }
+
+task runClassCount(type:JavaExec){
+    main = "it.unipd.bdc.ay2019.group49.examples.ClassCount" 
+    classpath = sourceSets.main.runtimeClasspath
+}
