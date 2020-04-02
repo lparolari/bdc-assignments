@@ -43,7 +43,7 @@ shadowJar {
     configurations = [project.configurations.shadowCompile] // Exclude runtime-only path
 }
 
-task example (type:JavaExec) {
+task runExample (type:JavaExec) {
     main = "it.unipd.bdc.ay2019.group49.examples.TemplateHW1"
     classpath = sourceSets.main.runtimeClasspath
 }

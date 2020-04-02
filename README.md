@@ -9,7 +9,7 @@ From command line with gradle
 ./gradlew <TASK> --args <ARGS>
 
 # For example
-./gradlew example --args "4 \"src/main/resources/examples/dataset.txt\""
+./gradlew runExample --args "4 \"src/main/resources/examples/dataset.txt\""
 ```
 
 From IntelliJ
