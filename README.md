@@ -2,7 +2,7 @@
 
 TODO 
 
-## Usage
+## Example
 
 From command line with gradle
 ```
@@ -21,6 +21,18 @@ From IntelliJ
 
 Note: the spark master is set programmatically, so there is no
 needs for `-Dspark.master="local[*]"`.
+
+## :heavy_check_mark: Implemented Algorithms
+
+**Class Count**
+
+- Deterministic Partition Size
+- Spark Partition Size
+  
+Run the algorithm
+```
+./gradlew runClassCount --args "4 \"src/main/resources/examples/input_10000.txt\""
+```
 
 ## :busts_in_silhouette: Authors
 
