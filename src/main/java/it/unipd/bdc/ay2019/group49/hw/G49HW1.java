@@ -9,6 +9,9 @@ import scala.Tuple2;
 import java.io.IOException;
 import java.util.*;
 
+import static java.util.Map.Entry.comparingByKey;
+import static java.util.stream.Collectors.toMap;
+
 public class G49HW1 {
 
     /*
@@ -46,7 +49,7 @@ public class G49HW1 {
 
         System.out.println();
         classCountDeterministicPartition(sc, partitionNo, datasetPath);
-        classCountSparkPartitions(sc, datasetPath);
+        classCountSparkPartitions(sc, partitionNo, datasetPath);
     }
 
     public static void classCountDeterministicPartition(JavaSparkContext sc, final int K, String path) {
@@ -84,10 +87,82 @@ public class G49HW1 {
                     return sum;
                 });
 
-        System.out.println(countClass.collectAsMap());
+        Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
+        System.out.println("Output pairs = " + sortedMap);
     }
 
-    public static void classCountSparkPartitions(JavaSparkContext sc, String path) {
+    public static void classCountSparkPartitions(JavaSparkContext sc, final int K, String path) {
+        final String MAX_PARTITION_SIZE = "maxPartitionSize";
+
         System.out.println("VERSION WITH SPARK PARTITIONS");
+
+        JavaRDD<String> elementsRDD = sc.textFile(path);
+
+        long N = elementsRDD.count();
+        long size = (long)Math.sqrt(N);
+
+        JavaPairRDD<String, Long> countClass;
+        countClass = elementsRDD
+                .flatMapToPair((element) -> {
+                    String[] tokens = element.split(" ");
+                    ArrayList<Tuple2<Long, String>> pairs = new ArrayList<>();
+                    pairs.add(new Tuple2<>(Long.parseLong(tokens[0]) % size, tokens[1]));
+                    return pairs.iterator();
+                })
+                .mapPartitionsToPair((cc) -> {
+                    long i = 0;
+
+                    // Count classes
+                    HashMap<String, Long> counts = new HashMap<>();
+                    while (cc.hasNext()) {
+                        Tuple2<Long, String> tuple = cc.next();
+                        counts.put(tuple._2(), 1L + counts.getOrDefault(tuple._2(), 0L));
+                        i++;
+                    }
+
+                    // Build array of pairs (class, count(class)) to pass to the next round
+                    ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
+                    for (Map.Entry<String, Long> e : counts.entrySet()) {
+                        pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
+                    }
+
+                    // Calculate maxPartitionSize
+                    pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, i));
+
+                    return pairs.iterator();
+                })
+                .groupByKey()
+//                .flatMapToPair((cc) -> {
+//                    List<Tuple2<String, Long>> pairs = new ArrayList<>();
+//                    if (cc._1().equals(MAX_PARTITION_SIZE)) {
+//                        long max = 0;
+//                        while (cc._2().iterator().hasNext()) {
+//                            long partMax = cc._2().iterator().next();
+//                            max = Math.max(max, partMax);
+//                        }
+//                        pairs.add(new Tuple2<>(cc._1(), max));
+//                    }
+//                    else {
+//                        long sum = 0;
+//                        while (cc._2().iterator().hasNext()) {
+//                            long count = cc._2().iterator().next();
+//                            sum += count;
+//                        }
+//                        pairs.add(new Tuple2<>(cc._1(), sum));
+//                    }
+//                    return pairs.iterator();
+//                });
+                .mapValues((it) -> {
+                    // TODO: how to count maxPartitionSize within this algorithm?
+
+                    long sum = 0;
+                    for (long c : it) {
+                        sum += c;
+                    }
+                    return sum;
+                });
+
+        Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
+        System.out.println("Output pairs = " + sortedMap);
     }
 }
