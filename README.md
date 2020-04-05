@@ -1,6 +1,6 @@
 # Big Data Computing Assignments
 
-TODO 
+TODO
 
 ## Example
 
@@ -14,7 +14,7 @@ From command line with gradle
 
 From IntelliJ
 - add a profile *build & run*
-- set the desired class to execute 
+- set the desired class to execute
 - add VM the following option `-Dspark.master="local[*]"`
 - set the program arguments
 - run
@@ -24,14 +24,18 @@ needs for `-Dspark.master="local[*]"`.
 
 ## :heavy_check_mark: Implemented Algorithms
 
-**Class Count**
+**HW1: Class Count**
 
 - Deterministic Partition Size
 - Spark Partition Size
-  
+
 Run the algorithm
 ```
-./gradlew runClassCount --args "4 \"src/main/resources/examples/input_10000.txt\""
+# Small example dataset
+./gradlew runClassCount --args "4 \"src/main/resources/hw1/example.txt\""
+
+# 10000-entry dataset
+./gradlew runClassCount --args "4 \"src/main/resources/hw1/input_10000.txt\""
 ```
 
 ## :busts_in_silhouette: Authors
