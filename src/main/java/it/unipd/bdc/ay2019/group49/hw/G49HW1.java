@@ -14,207 +14,220 @@ import static java.util.Map.Entry.comparingByKey;
 import static java.util.stream.Collectors.toMap;
 
 public class G49HW1 {
-  /*
-   * ASSIGNMENT ==========
-   * 
-   * You must write a program GxxHW1.java (for Java users) or GxxHW1.py (for
-   * Python users), where xx is your two-digit group number, which receives in
-   * input an integer K and path to a text file containing a collection of pairs
-   * (i,gamma_i). The text file stores one pair per line which contains the key i
-   * (a progressive integer index starting from 0) and the value gamma_i (a
-   * string) separated by single space, with no parentheses or comma. (Note that
-   * while in the problem defined in the slides the i-th input pair contained also
-   * an object o_i, here the objects are disregarded.)
-   */
+    /*
+     * ASSIGNMENT
+     * ==========
+     *
+     * You must write a program GxxHW1.java (for Java users) or GxxHW1.py (for
+     * Python users), where xx is your two-digit group number, which receives in
+     * input an integer K and path to a text file containing a collection of pairs
+     * (i,gamma_i). The text file stores one pair per line which contains the key i
+     * (a progressive integer index starting from 0) and the value gamma_i (a
+     * string) separated by single space, with no parentheses or comma. (Note that
+     * while in the problem defined in the slides the i-th input pair contained also
+     * an object o_i, here the objects are disregarded.)
+     */
 
-  public static void main(String[] args) throws IOException {
-    if (args.length != 2) {
-      throw new IllegalArgumentException("USAGE: num_partitions file_path");
+    public static void main(String[] args) throws IOException {
+        if (args.length != 2) {
+            throw new IllegalArgumentException("USAGE: num_partitions file_path");
+        }
+
+        // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        // SPARK SETUP
+        // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+        SparkConf conf = new SparkConf(true).setAppName("Homework1").setMaster("local[*]");
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        sc.setLogLevel("WARN");
+
+        // Input parameters
+        int partitionNo = Integer.parseInt(args[0]);
+        String datasetPath = args[1];
+
+        // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        // BASIC CLASS COUNT ALGORITHMS
+        // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+        System.out.println();
+        classCountDeterministicPartition(sc, partitionNo, datasetPath);
+        classCountSparkPartitions(sc, partitionNo, datasetPath);
+        classCountSparkPartitionsV2(sc, partitionNo, datasetPath);
     }
 
-    // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    // SPARK SETUP
-    // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    public static void classCountDeterministicPartition(JavaSparkContext sc, final int K, String path) {
+        System.out.println("VERSION WITH DETERMINISTIC PARTITIONS");
 
-    SparkConf conf = new SparkConf(true).setAppName("Homework1").setMaster("local[*]");
-    JavaSparkContext sc = new JavaSparkContext(conf);
-    sc.setLogLevel("WARN");
+        JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
 
-    // Input parameters
-    int partitionNo = Integer.parseInt(args[0]);
-    String datasetPath = args[1];
+        JavaPairRDD<String, Long> countClass;
+        countClass = elementsRDD
+            .flatMapToPair((element) -> {
+                String[] tokens = element.split(" ");
+                ArrayList<Tuple2<Integer, Tuple2<String, String>>> pairs = new ArrayList<>();
+                pairs.add(new Tuple2<>(Integer.parseInt(tokens[0]) % K, new Tuple2<>(tokens[0], tokens[1])));
+                return pairs.iterator();
+            })
+            .groupByKey()
+            .flatMapToPair((triplet) -> {
+                HashMap<String, Long> counts = new HashMap<>();
+                for (Tuple2<String, String> c : triplet._2())
+                    counts.put(c._2(), 1L + counts.getOrDefault(c._2(), 0L));
+                ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
+                for (Map.Entry<String, Long> e : counts.entrySet()) {
+                    pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
+                }
+                return pairs.iterator();
+            })
+            .groupByKey() // <-- REDUCE PHASE (R2)
+            .mapValues((it) -> {
+                long sum = 0;
+                for (long c : it)
+                    sum += c;
+                return sum;
+            });
 
-    // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    // BASIC CLASS COUNT ALGORITHMS
-    // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
+        System.out.println("Output pairs = " + sortedMap);
+    }
 
-    System.out.println();
-    classCountDeterministicPartition(sc, partitionNo, datasetPath);
-    classCountSparkPartitions(sc, partitionNo, datasetPath);
-    classCountSparkPartitionsV2(sc, partitionNo, datasetPath);
-  }
+    public static void classCountSparkPartitions(JavaSparkContext sc, final int K, String path) {
+        final String MAX_PARTITION_SIZE = "maxPartitionSize";
 
-  public static void classCountDeterministicPartition(JavaSparkContext sc, final int K, String path) {
-    System.out.println("VERSION WITH DETERMINISTIC PARTITIONS");
+        System.out.println("VERSION WITH SPARK PARTITIONS");
 
-    JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
+        JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
 
-    JavaPairRDD<String, Long> countClass;
-    countClass = elementsRDD.flatMapToPair((element) -> {
-      String[] tokens = element.split(" ");
-      ArrayList<Tuple2<Integer, Tuple2<String, String>>> pairs = new ArrayList<>();
-      pairs.add(new Tuple2<>(Integer.parseInt(tokens[0]) % K, new Tuple2<>(tokens[0], tokens[1])));
-      return pairs.iterator();
-    }).groupByKey().flatMapToPair((triplet) -> {
-      HashMap<String, Long> counts = new HashMap<>();
-      for (Tuple2<String, String> c : triplet._2())
-        counts.put(c._2(), 1L + counts.getOrDefault(c._2(), 0L));
-      ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-      for (Map.Entry<String, Long> e : counts.entrySet()) {
-        pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
-      }
-      return pairs.iterator();
-    }).groupByKey() // <-- REDUCE PHASE (R2)
-        .mapValues((it) -> {
-          long sum = 0;
-          for (long c : it)
-            sum += c;
-          return sum;
-        });
+        long N = elementsRDD.count();
+        long size = (long) Math.sqrt(N);
 
-    Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
-    System.out.println("Output pairs = " + sortedMap);
-  }
+        JavaPairRDD<String, Long> countClass;
 
-  public static void classCountSparkPartitions(JavaSparkContext sc, final int K, String path) {
-    final String MAX_PARTITION_SIZE = "maxPartitionSize";
+        countClass = elementsRDD
+            .flatMapToPair((element) -> {
+                String[] tokens = element.split(" ");
+                ArrayList<Tuple2<Long, String>> pairs = new ArrayList<>();
+                pairs.add(new Tuple2<>(Long.parseLong(tokens[0]) % K, tokens[1]));
+                return pairs.iterator();
+            })
+            .groupByKey()
+            .flatMapToPair((cc) -> {
+                long elementsProcessedByReducer = 0;
+                Iterator<String> elementsIterator = cc._2().iterator();
+                String currentClassName;
+                HashMap<String, Long> counts = new HashMap<>();
+                while (elementsIterator.hasNext()) {
+                    currentClassName = elementsIterator.next();
+                    counts.put(currentClassName, 1L + counts.getOrDefault(currentClassName, 0L));
+                    elementsProcessedByReducer++;
+                }
+                // Build array of pairs (class, count(class)) to pass to the next round
+                ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
+                for (Map.Entry<String, Long> e : counts.entrySet())
+                    pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
 
-    System.out.println("VERSION WITH SPARK PARTITIONS");
+                // Calculate maxPartitionSize
+                pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, elementsProcessedByReducer));
+                return pairs.iterator();
+            })
+            .groupByKey()
+            .flatMapToPair((cc) -> {
+                List<Tuple2<String, Long>> pairs = new ArrayList<>();
+                Iterator<Long> elementsIterator = cc._2().iterator();
 
-    JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
+                if (cc._1().equals(MAX_PARTITION_SIZE)) {
+                    long max = 0;
+                    while (elementsIterator.hasNext())
+                        max = Math.max(max, elementsIterator.next());
+                    pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, max));
+                } else {
+                    long sum = 0;
+                    while (elementsIterator.hasNext())
+                        sum += elementsIterator.next();
+                    pairs.add(new Tuple2<>(cc._1(), sum));
+                }
+                return pairs.iterator();
+            });
 
-    long N = elementsRDD.count();
-    long size = (long) Math.sqrt(N);
+        Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
 
-    JavaPairRDD<String, Long> countClass;
+        /*
+         * we have to remove MAX_PARTITION_SIZE from the map, because it could be
+         * greater than the class with highest occurences. in that case it would be
+         * printed MAX_PARTITION_SIZE instead the class
+         */
+        Long maxPartition = sortedMap.get(MAX_PARTITION_SIZE);
+        sortedMap.remove(MAX_PARTITION_SIZE);
 
-    countClass = elementsRDD.flatMapToPair((element) -> {
-      String[] tokens = element.split(" ");
-      ArrayList<Tuple2<Long, String>> pairs = new ArrayList<>();
-      pairs.add(new Tuple2<>(Long.parseLong(tokens[0]) % K, tokens[1]));
-      return pairs.iterator();
-    }).groupByKey().flatMapToPair((cc) -> {
-      long elementsProcessedByReducer = 0;
-      Iterator<String> elementsIterator = cc._2().iterator();
-      String currentClassName;
-      HashMap<String, Long> counts = new HashMap<>();
-      while (elementsIterator.hasNext()) {
-        currentClassName = elementsIterator.next();
-        counts.put(currentClassName, 1L + counts.getOrDefault(currentClassName, 0L));
-        elementsProcessedByReducer++;
-      }
-      // Build array of pairs (class, count(class)) to pass to the next round
-      ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-      for (Map.Entry<String, Long> e : counts.entrySet())
-        pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
+        Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
+        System.out.println(
+            "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
+        System.out.println("Max partition size = " + maxPartition);
+    }
 
-      // Calculate maxPartitionSize
-      pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, elementsProcessedByReducer));
-      return pairs.iterator();
+    public static void classCountSparkPartitionsV2(JavaSparkContext sc, final int K, String path) {
+        final String MAX_PARTITION_SIZE = "maxPartitionSize";
 
-    }).groupByKey().flatMapToPair((cc) -> {
-      List<Tuple2<String, Long>> pairs = new ArrayList<>();
-      Iterator<Long> elementsIterator = cc._2().iterator();
+        System.out.println("VERSION WITH SPARK PARTITIONS");
 
-      if (cc._1().equals(MAX_PARTITION_SIZE)) {
-        long max = 0;
-        while (elementsIterator.hasNext())
-          max = Math.max(max, elementsIterator.next());
-        pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, max));
-      } else {
-        long sum = 0;
-        while (elementsIterator.hasNext())
-          sum += elementsIterator.next();
-        pairs.add(new Tuple2<>(cc._1(), sum));
-      }
-      return pairs.iterator();
-    });
+        JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
 
-    Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
+        long N = elementsRDD.count();
+        long size = (long) Math.sqrt(N);
 
-    /*
-     * we have to remove MAX_PARTITION_SIZE from the map, because it could be
-     * greater than the class with highest occurences. in that case it would be
-     * printed MAX_PARTITION_SIZE instead the class
-     */
-    Long maxPartition = sortedMap.get(MAX_PARTITION_SIZE);
-    sortedMap.remove(MAX_PARTITION_SIZE);
+        JavaPairRDD<String, Long> countClass;
 
-    Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
-    System.out.println(
-        "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
-    System.out.println("Max partition size = " + maxPartition);
-  }
+        countClass = elementsRDD
+            .flatMapToPair((element) -> {
+                String[] tokens = element.split(" ");
+                ArrayList<Tuple2<Long, String>> pairs = new ArrayList<>();
+                pairs.add(new Tuple2<>(Long.parseLong(tokens[0]), tokens[1]));
+                return pairs.iterator();
+            })
+            .mapPartitionsToPair((cc) -> {
+                long elementsProcessedByReducer = 0;
+                HashMap<String, Long> counts = new HashMap<>();
+                while (cc.hasNext()) {
+                    Tuple2<Long, String> currentClassName = cc.next();
+                    counts.put(currentClassName._2(), 1L + counts.getOrDefault(currentClassName._2(), 0L));
+                    elementsProcessedByReducer++;
+                }
+                // Build array of pairs (class, count(class)) to pass to the next round
+                ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
+                for (Map.Entry<String, Long> e : counts.entrySet())
+                    pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
 
-  public static void classCountSparkPartitionsV2(JavaSparkContext sc, final int K, String path) {
-    final String MAX_PARTITION_SIZE = "maxPartitionSize";
+                // Calculate maxPartitionSize
+                pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, elementsProcessedByReducer));
+                return pairs.iterator();
 
-    System.out.println("VERSION WITH SPARK PARTITIONS");
+            })
+            .groupByKey()
+            .flatMapToPair((cc) -> {
+                List<Tuple2<String, Long>> pairs = new ArrayList<>();
+                Iterator<Long> elementsIterator = cc._2().iterator();
 
-    JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
+                if (cc._1().equals(MAX_PARTITION_SIZE)) {
+                    long max = 0;
+                    while (elementsIterator.hasNext())
+                        max = Math.max(max, elementsIterator.next());
+                    pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, max));
+                } else {
+                    long sum = 0;
+                    while (elementsIterator.hasNext())
+                        sum += elementsIterator.next();
+                    pairs.add(new Tuple2<>(cc._1(), sum));
+                }
+                return pairs.iterator();
+            });
 
-    long N = elementsRDD.count();
-    long size = (long) Math.sqrt(N);
+        Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
+        Long maxPartion = sortedMap.get(MAX_PARTITION_SIZE);
+        sortedMap.remove(MAX_PARTITION_SIZE);
+        Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
 
-    JavaPairRDD<String, Long> countClass;
-
-    countClass = elementsRDD.flatMapToPair((element) -> {
-      String[] tokens = element.split(" ");
-      ArrayList<Tuple2<Long, String>> pairs = new ArrayList<>();
-      pairs.add(new Tuple2<>(Long.parseLong(tokens[0]), tokens[1]));
-      return pairs.iterator();
-    }).mapPartitionsToPair((cc) -> {
-      long elementsProcessedByReducer = 0;
-      HashMap<String, Long> counts = new HashMap<>();
-      while (cc.hasNext()) {
-        Tuple2<Long, String> currentClassName = cc.next();
-        counts.put(currentClassName._2(), 1L + counts.getOrDefault(currentClassName._2(), 0L));
-        elementsProcessedByReducer++;
-      }
-      // Build array of pairs (class, count(class)) to pass to the next round
-      ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-      for (Map.Entry<String, Long> e : counts.entrySet())
-        pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
-
-      // Calculate maxPartitionSize
-      pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, elementsProcessedByReducer));
-      return pairs.iterator();
-
-    }).groupByKey().flatMapToPair((cc) -> {
-      List<Tuple2<String, Long>> pairs = new ArrayList<>();
-      Iterator<Long> elementsIterator = cc._2().iterator();
-
-      if (cc._1().equals(MAX_PARTITION_SIZE)) {
-        long max = 0;
-        while (elementsIterator.hasNext())
-          max = Math.max(max, elementsIterator.next());
-        pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, max));
-      } else {
-        long sum = 0;
-        while (elementsIterator.hasNext())
-          sum += elementsIterator.next();
-        pairs.add(new Tuple2<>(cc._1(), sum));
-      }
-      return pairs.iterator();
-    });
-
-    Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
-    Long maxPartion = sortedMap.get(MAX_PARTITION_SIZE);
-    sortedMap.remove(MAX_PARTITION_SIZE);
-    Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
-
-    System.out.println(
-        "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
-    System.out.println("Max partition size = " + maxPartion);
-  }
+        System.out.println(
+            "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
+        System.out.println("Max partition size = " + maxPartion);
+    }
 }
