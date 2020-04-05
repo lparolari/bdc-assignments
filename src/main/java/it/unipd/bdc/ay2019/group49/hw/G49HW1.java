@@ -141,13 +141,19 @@ public class G49HW1 {
     });
 
     Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
-    Long maxPartion = sortedMap.get(MAX_PARTITION_SIZE);
-    sortedMap.remove(MAX_PARTITION_SIZE);
-    Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
 
+    /*
+     * we have to remove MAX_PARTITION_SIZE from the map, because it could be
+     * greater than the class with highest occurences. in that case it would be
+     * printed MAX_PARTITION_SIZE instead the class
+     */
+    Long maxPartition = sortedMap.get(MAX_PARTITION_SIZE);
+    sortedMap.remove(MAX_PARTITION_SIZE);
+
+    Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
     System.out.println(
         "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
-    System.out.println("Max partition size = " + maxPartion);
+    System.out.println("Max partition size = " + maxPartition);
   }
 
   public static void classCountSparkPartitionsV2(JavaSparkContext sc, final int K, String path) {
@@ -155,7 +161,7 @@ public class G49HW1 {
 
     System.out.println("VERSION WITH SPARK PARTITIONS");
 
-    JavaRDD<String> elementsRDD = sc.textFile(path).repartition(2);
+    JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
 
     long N = elementsRDD.count();
     long size = (long) Math.sqrt(N);
