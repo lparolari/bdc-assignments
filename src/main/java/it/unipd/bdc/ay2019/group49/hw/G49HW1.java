@@ -141,10 +141,13 @@ public class G49HW1 {
     });
 
     Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
+    Long maxPartion = sortedMap.get(MAX_PARTITION_SIZE);
+    sortedMap.remove(MAX_PARTITION_SIZE);
     Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
+
     System.out.println(
         "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
-    System.out.println("Max partition size = " + sortedMap.get(MAX_PARTITION_SIZE));
+    System.out.println("Max partition size = " + maxPartion);
   }
 
   public static void classCountSparkPartitionsV2(JavaSparkContext sc, final int K, String path) {
@@ -198,12 +201,14 @@ public class G49HW1 {
       }
       return pairs.iterator();
     });
-    System.out.println(elementsRDD.getNumPartitions());
-    System.out.println(countClass.getNumPartitions());
+
     Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
+    Long maxPartion = sortedMap.get(MAX_PARTITION_SIZE);
+    sortedMap.remove(MAX_PARTITION_SIZE);
     Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
+
     System.out.println(
-        "Most frequent class =  pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
-    System.out.println("Max partition size  = " + sortedMap.get(MAX_PARTITION_SIZE));
+        "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
+    System.out.println("Max partition size = " + maxPartion);
   }
 }
