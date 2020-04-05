@@ -1,6 +1,6 @@
 # Big Data Computing Assignments
 
-TODO
+Implementation of some famous big data algorithm for the Big Data Computing course.
 
 ## Example
 
