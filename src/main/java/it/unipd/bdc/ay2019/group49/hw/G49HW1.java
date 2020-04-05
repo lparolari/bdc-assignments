@@ -52,7 +52,6 @@ public class G49HW1 {
         System.out.println();
         classCountDeterministicPartition(sc, partitionNo, datasetPath);
         classCountSparkPartitions(sc, partitionNo, datasetPath);
-        classCountSparkPartitionsV2(sc, partitionNo, datasetPath);
     }
 
     public static void classCountDeterministicPartition(JavaSparkContext sc, final int K, String path) {
@@ -92,80 +91,6 @@ public class G49HW1 {
     }
 
     public static void classCountSparkPartitions(JavaSparkContext sc, final int K, String path) {
-        final String MAX_PARTITION_SIZE = "maxPartitionSize";
-
-        System.out.println("VERSION WITH SPARK PARTITIONS");
-
-        JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
-
-        long N = elementsRDD.count();
-        long size = (long) Math.sqrt(N);
-
-        JavaPairRDD<String, Long> countClass;
-
-        countClass = elementsRDD
-            .flatMapToPair((element) -> {
-                String[] tokens = element.split(" ");
-                ArrayList<Tuple2<Long, String>> pairs = new ArrayList<>();
-                pairs.add(new Tuple2<>(Long.parseLong(tokens[0]) % K, tokens[1]));
-                return pairs.iterator();
-            })
-            .groupByKey()
-            .flatMapToPair((cc) -> {
-                long elementsProcessedByReducer = 0;
-                Iterator<String> elementsIterator = cc._2().iterator();
-                String currentClassName;
-                HashMap<String, Long> counts = new HashMap<>();
-                while (elementsIterator.hasNext()) {
-                    currentClassName = elementsIterator.next();
-                    counts.put(currentClassName, 1L + counts.getOrDefault(currentClassName, 0L));
-                    elementsProcessedByReducer++;
-                }
-                // Build array of pairs (class, count(class)) to pass to the next round
-                ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-                for (Map.Entry<String, Long> e : counts.entrySet())
-                    pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
-
-                // Calculate maxPartitionSize
-                pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, elementsProcessedByReducer));
-                return pairs.iterator();
-            })
-            .groupByKey()
-            .flatMapToPair((cc) -> {
-                List<Tuple2<String, Long>> pairs = new ArrayList<>();
-                Iterator<Long> elementsIterator = cc._2().iterator();
-
-                if (cc._1().equals(MAX_PARTITION_SIZE)) {
-                    long max = 0;
-                    while (elementsIterator.hasNext())
-                        max = Math.max(max, elementsIterator.next());
-                    pairs.add(new Tuple2<>(MAX_PARTITION_SIZE, max));
-                } else {
-                    long sum = 0;
-                    while (elementsIterator.hasNext())
-                        sum += elementsIterator.next();
-                    pairs.add(new Tuple2<>(cc._1(), sum));
-                }
-                return pairs.iterator();
-            });
-
-        Map<String, Long> sortedMap = new TreeMap<>(countClass.collectAsMap());
-
-        /*
-         * we have to remove MAX_PARTITION_SIZE from the map, because it could be
-         * greater than the class with highest occurences. in that case it would be
-         * printed MAX_PARTITION_SIZE instead the class
-         */
-        Long maxPartition = sortedMap.get(MAX_PARTITION_SIZE);
-        sortedMap.remove(MAX_PARTITION_SIZE);
-
-        Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(), Comparator.comparingLong(Map.Entry::getValue));
-        System.out.println(
-            "Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") " + "with max count");
-        System.out.println("Max partition size = " + maxPartition);
-    }
-
-    public static void classCountSparkPartitionsV2(JavaSparkContext sc, final int K, String path) {
         final String MAX_PARTITION_SIZE = "maxPartitionSize";
 
         System.out.println("VERSION WITH SPARK PARTITIONS");
