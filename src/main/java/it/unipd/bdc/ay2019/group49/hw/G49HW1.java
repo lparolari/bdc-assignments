@@ -10,9 +10,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
-import static java.util.Map.Entry.comparingByKey;
-import static java.util.stream.Collectors.toMap;
-
 public class G49HW1 {
     /*
      * ASSIGNMENT ==========
@@ -51,6 +48,7 @@ public class G49HW1 {
         System.out.println();
         classCountDeterministicPartition(sc, partitionNo, datasetPath);
         classCountSparkPartitions(sc, partitionNo, datasetPath);
+        classCountSparkPartitionsv2(sc, partitionNo, datasetPath);
     }
 
     public static void classCountDeterministicPartition(JavaSparkContext sc, final int K, String path) {
@@ -138,7 +136,7 @@ public class G49HW1 {
         Long maxPartion = sortedMap.get(MAX_PARTITION_SIZE);
         sortedMap.remove(MAX_PARTITION_SIZE);
         Entry<String, Long> maxValue = Collections.max(sortedMap.entrySet(),
-                Comparator.comparingLong(Map.Entry::getValue));
+                Comparator.comparingLong(Map.Entry::getValue)); // find class with max count
 
         System.out.println("Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") "
                 + "with max count");
@@ -173,25 +171,34 @@ public class G49HW1 {
             return pairs.iterator();
 
         }).groupByKey();
-        c2.collectAsMap().get(MAX_PARTITION_SIZE);
+        /*
+         * stop with groupByKey(), in order to calculate statistics outside of MR
+         * algorithm
+         */
+
         Map<String, Iterable<Long>> sortedMap_ = new TreeMap<>(c2.collectAsMap());
-        Map<String, Long> finalmap = new TreeMap<>();
+        Map<String, Long> finalmap = new TreeMap<>(); // map that will contain the total count for each class
         Iterator<Long> iterator_max = sortedMap_.get(MAX_PARTITION_SIZE).iterator();
         long max_ = 0;
-        while (iterator_max.hasNext()) {
+
+        while (iterator_max.hasNext()) { // find the max partition size
             Long current = iterator_max.next();
             max_ = Math.max(current, max_);
         }
-
+        /*
+         * remove MAX_PARTITION_SIZE in order to make max partition size not
+         * interferring when finding the max class count
+         */
         sortedMap_.remove(MAX_PARTITION_SIZE);
-        sortedMap_.keySet().forEach(s -> {
+
+        sortedMap_.keySet().forEach(s -> { // for each class, sum all the entries to get total count for each class
             Iterator<Long> it = sortedMap_.get(s).iterator();
             long sum = 0;
             while (it.hasNext())
                 sum += it.next();
             finalmap.put(s, sum);
         });
-        Entry<String, Long> maxValue = Collections.max(finalmap.entrySet(),
+        Entry<String, Long> maxValue = Collections.max(finalmap.entrySet(), // find class with max count
                 Comparator.comparingLong(Map.Entry::getValue));
         System.out.println("Most frequent class = pair (" + maxValue.getKey() + "," + maxValue.getValue() + ") "
                 + "with max count");
