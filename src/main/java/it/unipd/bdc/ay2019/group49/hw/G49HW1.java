@@ -48,7 +48,6 @@ public class G49HW1 {
         System.out.println();
         classCountDeterministicPartition(sc, partitionNo, datasetPath);
         classCountSparkPartitions(sc, partitionNo, datasetPath);
-        classCountSparkPartitionsv2(sc, partitionNo, datasetPath);
     }
 
     public static void classCountDeterministicPartition(JavaSparkContext sc, final int K, String path) {
