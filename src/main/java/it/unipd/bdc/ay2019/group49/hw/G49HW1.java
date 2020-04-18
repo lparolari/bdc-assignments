@@ -51,8 +51,6 @@ public class G49HW1 {
         System.out.println();
         classCountDeterministicPartition(sc, partitionNo, datasetPath);
         classCountSparkPartitions(sc, partitionNo, datasetPath);
-        System.out.println("----------------");
-        v2(sc, partitionNo, datasetPath);
     }
 
     public static void classCountDeterministicPartition(JavaSparkContext sc, final int K, String path) {
@@ -87,15 +85,13 @@ public class G49HW1 {
         System.out.println("Output pairs = " + sortedMap);
     }
 
+    // version with statistics computed inside mapReduce algorithm
     public static void classCountSparkPartitions(JavaSparkContext sc, final int K, String path) {
         final String MAX_PARTITION_SIZE = "maxPartitionSize";
 
         System.out.println("VERSION WITH SPARK PARTITIONS");
 
         JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
-
-        long N = elementsRDD.count();
-        long size = (long) Math.sqrt(N);
 
         JavaPairRDD<String, Long> countClass;
         countClass = elementsRDD.flatMapToPair((element) -> {
@@ -149,10 +145,11 @@ public class G49HW1 {
         System.out.println("Max partition size = " + maxPartion);
     }
 
+    // version with statistics computed by hand
     public static void classCountSparkPartitionsv2(JavaSparkContext sc, final int K, String path) {
         JavaRDD<String> elementsRDD = sc.textFile(path).repartition(K);
         final String MAX_PARTITION_SIZE = "maxPartitionSize";
-        long N = elementsRDD.count();
+
         JavaPairRDD<String, Iterable<Long>> c2 = elementsRDD.flatMapToPair((element) -> {
             String[] tokens = element.split(" ");
             ArrayList<Tuple2<Long, String>> pairs = new ArrayList<>();
