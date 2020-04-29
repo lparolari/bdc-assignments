@@ -38,6 +38,19 @@ Run the algorithm
 ./gradlew runClassCount --args "4 \"src/main/resources/hw1/input_10000.txt\""
 ```
 
+**HW2: Max Pairwise Distance**
+
+- Exact solution
+- 2-approximation by taking k random points
+- Exact solution of a subset of C of S, where C are k centers retruned by Farthest-First Traversal
+
+```
+./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/aircraft-mainland.csv\""
+./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/uber-small.csv\""
+./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/uber-medium.csv\""
+./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/uber-large.csv\""
+```
+
 ## :busts_in_silhouette: Authors
 
 **Luca Parolari**
