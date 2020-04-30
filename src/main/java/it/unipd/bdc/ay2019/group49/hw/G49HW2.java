@@ -18,8 +18,39 @@ public class G49HW2 {
      * @return The exact maximum distance between two points in `S`.
      */
     public static Double exactMPD(List<Vector> S) {
-        return 1d;
-        // throw new UnsupportedOperationException("This method is not implemented yet.");
+        double md = 0d;  // max distance between points, initially set to 0.
+
+        /*
+        Note: a very simple optimization for the exactMPD algorithm is to compare the points once.
+
+        Due to the symmetric property of the distance metric d(p1, p2) = d(p2, p1), so we can
+        skip some checks.
+
+        The following two lines are the (more expressive) naive algorithm.
+        ```
+        for (Vector p1 : S)
+            for (Vector p2 : S)
+                max( d(p1, p2) )
+        ```
+
+        EXACT ALGORITHM (NAIVE, without optimization)
+        Max distance = 3327.886194830245
+        Running time = 4461
+
+        EXACT ALGORITHM (with optimization)
+        Max distance = 3327.886194830245
+        Running time = 2337
+        */
+
+        for (int i = 0; i < S.size(); i++) {
+            for (int j = i; j < S.size(); j++) {
+                Vector p1 = S.get(i);
+                Vector p2 = S.get(j);
+                md = Math.max(md, Vectors.sqdist(p1, p2));
+            }
+        }
+
+        return md;
     }
 
     /**
