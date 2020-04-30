@@ -11,7 +11,17 @@ import java.util.stream.Collectors;
 
 public class G49HW2 {
 
+    // Group 49: Luca Parolari, Giulio Piva
+    // Homework 2, Big Data Computing
+    // Assigned: 26/04/20, Deadline: 17/05/20
+
+    // See [the homework page](http://www.dei.unipd.it/~capri/BDC/homeworks.htm)
+    // and [the homework 2 page](http://www.dei.unipd.it/~capri/BDC/homework2.htm).
+
     public static final long SEED = 1236601;  // my university id
+
+    // HOMEWORK ALGORITHMS
+    // ===================
 
     /**
      * Compute the exact solution of maximum pairwise problem on the given input set `S`.
@@ -80,6 +90,9 @@ public class G49HW2 {
     public static Double kCenterMPD(List<Vector> S, Integer k) {
         return exactMPD(farthestFirstTraversal(S, k));
     }
+
+    // MAIN
+    // ====
 
     public static void main(String[] args) throws IOException {
         // Checking command line arguments.
