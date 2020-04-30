@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 public class G49HW2 {
 
+    public static final long SEED = 1236601;  // my university id
+
     /**
      * Compute the exact solution of maximum pairwise problem on the given input set `S`.
      *
@@ -76,8 +78,7 @@ public class G49HW2 {
      * where C are k centers returned by Farthest-First Traversal;
      */
     public static Double kCenterMPD(List<Vector> S, Integer k) {
-        return 1d;
-        // throw new UnsupportedOperationException("This method is not implemented yet.");
+        return exactMPD(farthestFirstTraversal(S, k));
     }
 
     public static void main(String[] args) throws IOException {
@@ -102,6 +103,58 @@ public class G49HW2 {
 
         runKCenterMPD(inputSet, k);
         System.out.println();
+    }
+
+    // AUX ALGORITHMS
+    // ==============
+
+    // Return a list of k centers taken from S with farther first traversal approach.
+    private static List<Vector> farthestFirstTraversal(List<Vector> S, Integer k) {
+        @SuppressWarnings("UnnecessaryLocalVariable")
+        List<Vector> points = S;                   // rename
+        List<Vector> centers = new ArrayList<>();  // centers
+
+        Random generator = new Random(SEED);  // the random generator
+
+        /*
+        Note: in the pseudo-code of this algorithm, selected centers are removed from the point set (the `points`
+        collection in our case) but we have decided to do not remove them for the following reasons:
+        - k is usually very small, i.e., in practise centers removal do not improve significantly the performance
+        - the `remove(obj)` method can reduce performances if the object need to be searched
+        - the `remove(index)` methods needs index management that can lead to errors and maintenance problems
+        */
+
+        final int random = generator.nextInt(points.size());  // random first center
+        Vector first = points.get(random);
+        centers.add(first);  // add to solution
+
+        while (centers.size() < k) {
+            Vector p = maximizeDistance(centers, points);
+            centers.add(p);
+        }
+
+        return centers;
+    }
+
+    // Return a point from S that maximizes the distances between all centers in C.
+    private static Vector maximizeDistance(List<Vector> C, List<Vector> S) {
+        double md = 0d;  // max distance
+        Vector r = null;  // farthest point from centers
+
+        for (Vector q : S) {  // forall point in point set
+            double d = 0d;  // sum of distances from q to all centers in C
+
+            for (Vector p : C) {  // forall centers
+                d += Vectors.sqdist(p, q);
+            }
+
+            if (d > md) {  // q is maximizing the distance between centers
+                md = d;
+                r = q;
+            }
+        }
+
+        return r;
     }
 
     // AUX FUNCTIONS
