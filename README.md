@@ -2,9 +2,19 @@
 
 Implementation of some famous big data algorithm for the Big Data Computing course.
 
-## Example
+## 🚀 Getting Started
 
-From command line with gradle
+Download the repository
+```
+git clone git@github.com:lparolari/bdc-assignments.git
+# or, with https
+# git clone https://github.com/lparolari/bdc-assignments.git
+
+cd bcd-assignments
+```
+
+Run our algorithms (see next section) with gradle from the
+command line
 ```
 ./gradlew <TASK> --args <ARGS>
 
@@ -22,9 +32,9 @@ From IntelliJ
 Note: the spark master is set programmatically, so there is no
 needs for `-Dspark.master="local[*]"`.
 
-## :heavy_check_mark: Implemented Algorithms
+## ✔️ Implemented Algorithms
 
-**HW1: Class Count**
+### HW1: Class Count
 
 - Deterministic Partition Size
 - Spark Partition Size
@@ -38,7 +48,7 @@ Run the algorithm
 ./gradlew runClassCount --args "4 \"src/main/resources/hw1/input_10000.txt\""
 ```
 
-**HW2: Max Pairwise Distance**
+### HW2: Max Pairwise Distance
 
 - Exact solution
 - 2-approximation by taking k random points
@@ -51,7 +61,7 @@ Run the algorithm
 ./gradlew runMaxPairwiseDistance --args "\"src/main/resources/hw2/uber-large.csv\" 4"
 ```
 
-## :busts_in_silhouette: Authors
+## 👥 Authors
 
 **Luca Parolari**
 
@@ -59,6 +69,11 @@ Run the algorithm
 
 **Giulio Piva**
 
-## :memo: License
+## 🙏 Credits
+
+Thanks to our big data course tutors.
+Take a look at their [course web page](http://www.dei.unipd.it/~capri/BDC/).
+
+## 📝 License
 
 The project is MIT licensed. See [LICENSE](LICENSE) file.
