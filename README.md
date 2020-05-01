@@ -45,10 +45,10 @@ Run the algorithm
 - Exact solution of a subset of C of S, where C are k centers retruned by Farthest-First Traversal
 
 ```
-./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/aircraft-mainland.csv\""
-./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/uber-small.csv\""
-./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/uber-medium.csv\""
-./gradlew runMaxPairwiseDistance --args "4 \"src/main/resources/hw2/uber-large.csv\""
+./gradlew runMaxPairwiseDistance --args "\"src/main/resources/hw2/aircraft-mainland.csv\" 4"
+./gradlew runMaxPairwiseDistance --args "\"src/main/resources/hw2/uber-small.csv\" 4"
+./gradlew runMaxPairwiseDistance --args "\"src/main/resources/hw2/uber-medium.csv\" 4"
+./gradlew runMaxPairwiseDistance --args "\"src/main/resources/hw2/uber-large.csv\" 4"
 ```
 
 ## :busts_in_silhouette: Authors

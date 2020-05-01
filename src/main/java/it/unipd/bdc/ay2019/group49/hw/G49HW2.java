@@ -100,9 +100,9 @@ public class G49HW2 {
             throw new IllegalArgumentException("USAGE: num_partitions file_path");
         }
 
-        // Read number of partitions and input dataset.
-        Integer k = Integer.parseInt(args[0]);
-        String filename = args[1];
+        // Read a path to a text file containing a set of points in Euclidean space, and an integer.
+        String filename = args[0];
+        Integer k = Integer.parseInt(args[1]);
 
         // Get the input set from given file.
         List<Vector> inputSet = readVectorsSequence(filename);
