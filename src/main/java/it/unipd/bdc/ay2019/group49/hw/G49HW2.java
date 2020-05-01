@@ -62,7 +62,7 @@ public class G49HW2 {
             }
         }
 
-        return md;
+        return Math.sqrt(md);
     }
 
     /**
