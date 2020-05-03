@@ -42,8 +42,10 @@ public class G49HW2 {
         ```
         for (Vector p1 : S)
             for (Vector p2 : S)
-                max( d(p1, p2) )
+                res = max( res, d(p1, p2) )
         ```
+
+        For aircraft-mainland:
 
         EXACT ALGORITHM (NAIVE, without optimization)
         Max distance = 3327.886194830245
