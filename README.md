@@ -61,6 +61,23 @@ Run the algorithm
 ./gradlew runMaxPairwiseDistance --args "\"src/main/resources/hw2/uber-large.csv\" 4"
 ```
 
+**Running time**
+
+The following table summarizes the running time for the algorithms benchmarked over
+different dataset and with some k value. Times are expressed in millisecond. This runs
+refer only to correct results. Data are collected in "one shot".
+
+Algorithm | Aircraft Mainland | Uber (SM) | Uber (MD) | Uber (LG) | Notes
+--- | --- | --- | --- | --- | ---
+Exact algorithm | 2468 | 136 | 2078582 |  | TODO: Uber Large
+2-approx algorithm (k = 4) |  |  |  |  | TODO: all
+k-center based algorithm (k = 4) | 9 | 2 | 78 |  |
+
+
+Algorithm (variant) | Aircraft Mainland | Uber (SM) | Uber (MD) | Uber (LG) | Notes
+--- | --- | --- | --- | --- | ---
+k-center based algorithm (k = 700) |  |  | 1120479 |  | Note: k = 700 =~ sqrt(N), where N is the size of Uber Medium (=~ 500k entries) |
+
 ## 👥 Authors
 
 **Luca Parolari**
