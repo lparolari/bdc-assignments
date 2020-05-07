@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class G49HW2 {
 
@@ -76,8 +78,23 @@ public class G49HW2 {
      * @return The 2-approximated maximum distance between two points in `S`.
      */
     public static Double twoApproxMPD(List<Vector> S, Integer k) {
-        return 1d;
-        // throw new UnsupportedOperationException("This method is not implemented yet.");
+        Random generator = new Random(SEED);
+
+        // TODO: review this algorithm.
+
+        // Collect `k` random centers.
+        List<Vector> C = IntStream.range(0, k)
+                .map(i -> generator.nextInt(S.size()))
+                .mapToObj(S::get)
+                .collect(Collectors.toList());
+
+        // The farthest point in space from random centers.
+        Vector maxInSpace = maximizeDistance(C, S);
+
+        // The farthest point in the centers set from the singleton `maxInSpace`.
+        Vector maxInCenters = maximizeDistance(Collections.singletonList(maxInSpace), C);
+
+        return Math.sqrt(Vectors.sqdist(maxInSpace, maxInCenters));
     }
 
     /**
