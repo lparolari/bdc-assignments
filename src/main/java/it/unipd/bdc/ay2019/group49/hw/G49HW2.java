@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class G49HW2 {
 
@@ -59,7 +58,7 @@ public class G49HW2 {
         */
 
         for (int i = 0; i < S.size(); i++) {
-            for (int j = i; j < S.size(); j++) {
+            for (int j = i + 1; j < S.size(); j++) {
                 Vector p1 = S.get(i);
                 Vector p2 = S.get(j);
                 md = Math.max(md, Vectors.sqdist(p1, p2));
@@ -88,13 +87,15 @@ public class G49HW2 {
                 .mapToObj(S::get)
                 .collect(Collectors.toList());
 
-        // The farthest point in space from random centers.
-        Vector maxInSpace = maximizeDistance(C, S);
+        double md = 0d;
 
-        // The farthest point in the centers set from the singleton `maxInSpace`.
-        Vector maxInCenters = maximizeDistance(Collections.singletonList(maxInSpace), C);
+        for (Vector p1 : S) {
+            for (Vector p2 : C) {
+                md = Math.max(md, Vectors.sqdist(p1, p2));
+            }
+        }
 
-        return Math.sqrt(Vectors.sqdist(maxInSpace, maxInCenters));
+        return Math.sqrt(md);
     }
 
     /**
@@ -161,7 +162,7 @@ public class G49HW2 {
         centers.add(first);  // add to solution
 
         while (centers.size() < k) {
-            Vector p = maximizeDistance(centers, points);
+            Vector p = maximizeDistanceFromCenters(centers, points);
             centers.add(p);
         }
 
@@ -169,7 +170,7 @@ public class G49HW2 {
     }
 
     // Return a point from S that maximizes the distances between all centers in C.
-    private static Vector maximizeDistance(List<Vector> C, List<Vector> S) {
+    private static Vector maximizeDistanceFromCenters(List<Vector> C, List<Vector> S) {
         double md = 0d;  // max distance
         Vector r = null;  // farthest point from centers
 
