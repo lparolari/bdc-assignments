@@ -61,7 +61,7 @@ public class G49HW2 {
             for (int j = i + 1; j < S.size(); j++) {
                 Vector p1 = S.get(i);
                 Vector p2 = S.get(j);
-                md = Math.max(md, distance(p1, p2));
+                md = Math.max(md, Vectors.sqdist(p1, p2));
             }
         }
 
@@ -91,7 +91,7 @@ public class G49HW2 {
 
         for (Vector p1 : S) {
             for (Vector p2 : C) {
-                md = Math.max(md, distance(p1, p2));
+                md = Math.max(md, Vectors.sqdist(p1, p2));
             }
         }
 
@@ -207,11 +207,6 @@ public class G49HW2 {
         }
     }
 
-    /** @return The distance between p and q. */
-    public static Double distance(Vector p, Vector q)  {
-        return Vectors.sqdist(p, q);
-    }
-
     /** @return A pair where the first value is the minimum distance between p and q in S, and the second pair
     // is itself a pair with the two p and q. */
     private static Pair<Double, Pair<Vector, Vector>> distance(Vector p, List<Vector> S) {
@@ -219,7 +214,7 @@ public class G49HW2 {
         Vector r = null;
 
         for (Vector q : S) {
-            d =Math.min(distance(p, q), d);
+            d =Math.min(Vectors.sqdist(p, q), d);
             r = q;
         }
 
