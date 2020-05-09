@@ -31,8 +31,6 @@ public class G49HW2 {
      * @return The exact maximum distance between two points in `S`.
      */
     public static Double exactMPD(List<Vector> S) {
-        double md = 0d;  // max distance between points, initially set to 0.
-
         /*
         Note: a very simple optimization for the exactMPD algorithm is to compare the points once.
 
@@ -57,11 +55,13 @@ public class G49HW2 {
         Running time = 2337
         */
 
+        double md = 0d;  // max distance between points, initially set to 0.
+
         for (int i = 0; i < S.size(); i++) {
             for (int j = i + 1; j < S.size(); j++) {
                 Vector p1 = S.get(i);
                 Vector p2 = S.get(j);
-                md = Math.max(md, Vectors.sqdist(p1, p2));
+                md = Math.max(md, distance(p1, p2));
             }
         }
 
@@ -91,7 +91,7 @@ public class G49HW2 {
 
         for (Vector p1 : S) {
             for (Vector p2 : C) {
-                md = Math.max(md, Vectors.sqdist(p1, p2));
+                md = Math.max(md, distance(p1, p2));
             }
         }
 
@@ -135,13 +135,12 @@ public class G49HW2 {
         System.out.println();
 
         runKCenterMPD(inputSet, k);
-        System.out.println();
     }
 
     // AUX ALGORITHMS
     // ==============
 
-    // Return a list of k centers taken from S with farther first traversal approach.
+    /** @return A list of k centers taken from S with farthest first traversal approach. */
     private static List<Vector> farthestFirstTraversal(List<Vector> S, Integer k) {
         @SuppressWarnings("UnnecessaryLocalVariable")
         List<Vector> points = S;                   // rename
@@ -169,25 +168,62 @@ public class G49HW2 {
         return centers;
     }
 
-    // Return a point from S that maximizes the distances between all centers in C.
+    /** @return A point from S that maximizes the `distance` function among all centers in C. */
     private static Vector maximizeDistanceFromCenters(List<Vector> C, List<Vector> S) {
-        double md = 0d;  // max distance
-        Vector r = null;  // farthest point from centers
+        Vector r = null;  // farthest point from centers the nearest center
+        double max_d = Double.MIN_VALUE;
 
-        for (Vector q : S) {  // forall point in point set
-            double d = 0d;  // sum of distances from q to all centers in C
+        for (Vector p : S) {
+            double d = distance(p, C).first();
 
-            for (Vector p : C) {  // forall centers
-                d += Vectors.sqdist(p, q);
-            }
-
-            if (d > md) {  // q is maximizing the distance between centers
-                md = d;
-                r = q;
+            if (d > max_d) {
+                max_d = d;
+                r = p;
             }
         }
 
         return r;
+    }
+
+    // DISTANCE AUX FUNCTIONS
+    // ======================
+
+    /** Generic pair class. */
+    private static class Pair<A, B> {
+        private final A first;
+        private final B second;
+
+        public Pair(A first, B second) {
+            super();
+            this.first = first;
+            this.second = second;
+        }
+
+        public A first() { return first; }
+        public B second() { return second; }
+
+        public String toString() {
+            return "(" + first + ", " + second + ")";
+        }
+    }
+
+    /** @return The distance between p and q. */
+    public static Double distance(Vector p, Vector q)  {
+        return Vectors.sqdist(p, q);
+    }
+
+    /** @return A pair where the first value is the minimum distance between p and q in S, and the second pair
+    // is itself a pair with the two p and q. */
+    private static Pair<Double, Pair<Vector, Vector>> distance(Vector p, List<Vector> S) {
+        double d = Double.MAX_VALUE;
+        Vector r = null;
+
+        for (Vector q : S) {
+            d =Math.min(distance(p, q), d);
+            r = q;
+        }
+
+        return new Pair<>(d, new Pair<>(p, r));
     }
 
     // AUX FUNCTIONS
