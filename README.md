@@ -67,16 +67,72 @@ The following table summarizes the running time for the algorithms benchmarked o
 different dataset and with some k value. Times are expressed in millisecond. This runs
 refer only to correct results. Data are collected in "one shot".
 
-Algorithm | Aircraft Mainland | Uber (SM) | Uber (MD) | Uber (LG) | Notes
---- | --- | --- | --- | --- | ---
-Exact algorithm | 2468 | 136 | 2078582 |  | TODO: Uber Large
-2-approx algorithm (k = 4) |  |  |  |  | TODO: all
-k-center based algorithm (k = 4) | 9 | 2 | 78 |  |
+*Comparative with K = 4 (only for 2-approx and k-center)*
 
+Dataset | Exact | 2-approx | kCenter
+--- | --- | --- | ---
+Aircraft Mainland | 2468 | 190 | 197
+Uber Small | 136 | 156 | 176 |
+Uber Medium | 2078582 | 196 | 504 |
+Uber Large | n/d | 675 | 822 |
 
-Algorithm (variant) | Aircraft Mainland | Uber (SM) | Uber (MD) | Uber (LG) | Notes
---- | --- | --- | --- | --- | ---
-k-center based algorithm (k = 700) |  |  | 1120479 |  | Note: k = 700 =~ sqrt(N), where N is the size of Uber Medium (=~ 500k entries) |
+*Comparative with K = 128 (only for 2-approx and k-center)*
+
+Dataset | Exact | 2-approx | kCenter
+--- | --- | --- | ---
+Aircraft Mainland | 2468 | 264 | 1993
+Uber Small | 136 | 154 | 266 |
+Uber Medium | 2078582 | 1743 | 52554 |
+Uber Large | n/d | 2992 | 169519 |
+
+*Full benchmark list*
+
+Algorithm | Dataset | K | Time (ms)
+--- | --- | --- | ---
+exact | Aircraft Mainland | - | 2468
+exact | Uber Small | - | 136
+exact | Uber Medium | - | 2078582
+exact | Uber Large | - | n/d
+2-approx | Aircraft Mainland | 4 | 190
+2-approx | Aircraft Mainland | 8 | 204
+2-approx | Aircraft Mainland | 32 | 485
+2-approx | Aircraft Mainland | 128 | 264
+2-approx | Uber Small | 4 | 156
+2-approx | Uber Small | 8 | 202
+2-approx | Uber Small | 32 | 168
+2-approx | Uber Small | 128 | 154
+2-approx | Uber Medium | 4 | 196
+2-approx | Uber Medium | 8 | 387
+2-approx | Uber Medium | 32 | 473
+2-approx | Uber Medium | 128 | 1743
+2-approx | Uber Large | 4 | 675
+2-approx | Uber Large | 8 | 462
+2-approx | Uber Large | 32 | 963
+2-approx | Uber Large | 128 | 2992
+kCenter | Aircraft Mainland | 4 | 197
+kCenter | Aircraft Mainland | 8 | 227
+kCenter | Aircraft Mainland | 32 | 639
+kCenter | Aircraft Mainland | 128 | 1993
+kCenter | Uber Small | 4 | 176
+kCenter | Uber Small | 8 | 148
+kCenter | Uber Small | 32 | 191
+kCenter | Uber Small | 128 | 266
+kCenter | Uber Medium | 4 | 504
+kCenter | Uber Medium | 8 | 947
+kCenter | Uber Medium | 32 | 5395
+kCenter | Uber Medium | 128 | 52554
+kCenter | Uber Large | 4 | 882
+kCenter | Uber Large | 8 | 1431
+kCenter | Uber Large | 32 | 12574
+kCenter | Uber Large | 128 | 169519
+
+**Run the benchmarks**
+
+If you want to run the benchmarks yourself you can look at `hw2run.sh`, `hw2scale.sh`
+and `hw2bench.sh` scripts that we made available in order to simplify this task.
+
+Please note that benchmarking was not the aim of this exercise. We took running times
+*one shot*, and we decided to leave benchmark results out of the source control.
 
 ## 👥 Authors
 

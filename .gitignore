@@ -188,3 +188,7 @@ local.properties
 # Annotation Processing
 .apt_generated/
 .apt_generated_test/
+
+
+### Benchmarks ###
+benchmark/*

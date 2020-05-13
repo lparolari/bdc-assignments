@@ -16,8 +16,8 @@ public class G49HW2 {
     // Homework 2, Big Data Computing
     // Assigned: 26/04/20, Deadline: 17/05/20
 
-    // See [the homework page](http://www.dei.unipd.it/~capri/BDC/homeworks.htm)
-    // and [the homework 2 page](http://www.dei.unipd.it/~capri/BDC/homework2.htm).
+    // See [http://www.dei.unipd.it/~capri/BDC/homeworks.htm](http://www.dei.unipd.it/~capri/BDC/homeworks.htm)
+    // and [http://www.dei.unipd.it/~capri/BDC/homework2.htm](http://www.dei.unipd.it/~capri/BDC/homework2.htm).
 
     public static final long SEED = 1236601;  // my university id
 
@@ -79,8 +79,6 @@ public class G49HW2 {
     public static Double twoApproxMPD(List<Vector> S, Integer k) {
         Random generator = new Random(SEED);
 
-        // TODO: review this algorithm.
-
         // Collect `k` random centers.
         List<Vector> C = IntStream.range(0, k)
                 .map(i -> generator.nextInt(S.size()))
@@ -116,8 +114,11 @@ public class G49HW2 {
 
     public static void main(String[] args) throws IOException {
         // Checking command line arguments.
-        if (args.length != 2) {
-            throw new IllegalArgumentException("USAGE: num_partitions file_path");
+        //   args[0] = the dataset filename
+        //   args[1] = an integer K
+        //   args[2] = algorithm to run, optional
+        if (args.length < 2 || args.length > 3) {  // 2 or 3 parameters allowed
+            throw new IllegalArgumentException("USAGE: dataset_path k [{exact, 2approx, kCenter}]");
         }
 
         // Read a path to a text file containing a set of points in Euclidean space, and an integer.
@@ -128,13 +129,19 @@ public class G49HW2 {
         List<Vector> inputSet = readVectorsSequence(filename);
 
         // Run and measure the algorithms.
-        runExactMPD(inputSet);
-        System.out.println();
+        if (args.length < 3 || args[2].equals("exact")) {
+            runExactMPD(inputSet);
+            System.out.println();
+        }
 
-        runTwoApproxMPD(inputSet, k);
-        System.out.println();
+        if (args.length < 3 || args[2].equals("2approx")) {
+            runTwoApproxMPD(inputSet, k);
+            System.out.println();
+        }
 
-        runKCenterMPD(inputSet, k);
+        if (args.length < 3 || args[2].equals("kCenter")) {
+            runKCenterMPD(inputSet, k);
+        }
     }
 
     // AUX ALGORITHMS
@@ -153,7 +160,7 @@ public class G49HW2 {
         collection in our case) but we have decided to do not remove them for the following reasons:
         - k is usually very small, i.e., in practise centers removal do not improve significantly the performance
         - the `remove(obj)` method can reduce performances if the object need to be searched
-        - the `remove(index)` methods needs index management that can lead to errors and maintenance problems
+        - the `remove(index)` method needs index management that can lead to errors and maintenance problems
         */
 
         final int random = generator.nextInt(points.size());  // random first center
