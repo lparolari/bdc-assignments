@@ -167,69 +167,61 @@ public class G49HW2 {
         Vector first = points.get(random);
         centers.add(first);  // add to solution
 
-        while (centers.size() < k) {
-            Vector p = maximizeDistanceFromCenters(centers, points);
-            centers.add(p);
+        // Maintain in memory the association between a point and the distance from its closest center.
+        // Map: point -> distance from its closest center.
+        HashMap<Vector, Double> cache = new HashMap<>();
+
+        // New center calculated on distance updates.
+        Vector newCenter = null;
+
+        // Initialization: calculate all distances from first center and find the new center for the next iteration.
+        // Complexity: O(S)
+        {
+            Double maxDistance = Double.MIN_VALUE;
+            for (Vector p : points) {
+                Double distance = Vectors.sqdist(p, first);
+                cache.put(p, distance);
+                if (distance > maxDistance) {
+                    newCenter = p;
+                    maxDistance = distance;
+                }
+            }
         }
+
+        // Iteration: update distances from
+        // Complexity: O((k-1) * |S|)
+        while (centers.size() < k) {
+            Double maxDistance = Double.MIN_VALUE;
+
+            for (Vector p : points) {
+                // get the distance between p and newCenter calculated from prev iteration
+                Double distance = Vectors.sqdist(p, newCenter);
+
+                Double oldDistance = cache.get(p);  // distance calculated in previous iteration
+                Double newDistance = oldDistance;   // default for new distance: leave the old unchanged
+
+                // update the distance if less than the old, i.e. the point p is closer to newCenter
+                if (distance < oldDistance) {
+                    newDistance = distance;
+                }
+
+                // update max distance if required, i.e., newDistance (can be really new or the old one) is
+                // greater that actual max distance
+                if (newDistance > maxDistance) {
+                    maxDistance = newDistance;
+                    newCenter = p;
+                }
+
+                // update the cache
+                cache.put(p, newDistance);
+            }
+
+            centers.add(newCenter);
+        }
+
+        // Total Complexity: O(|S| + ((k - 1) * |S|)) = O(k * |S|)
 
         return centers;
-    }
-
-    /** @return A point from S that maximizes the `distance` function among all centers in C. */
-    private static Vector maximizeDistanceFromCenters(List<Vector> C, List<Vector> S) {
-        Vector r = null;  // farthest point from centers the nearest center
-        double max_d = Double.MIN_VALUE;
-
-        for (Vector p : S) {
-            double d = distance(p, C).first();
-
-            if (d > max_d) {
-                max_d = d;
-                r = p;
-            }
-        }
-
-        return r;
-    }
-
-    // DISTANCE AUX FUNCTIONS
-    // ======================
-
-    /** Generic pair class. */
-    private static class Pair<A, B> {
-        private final A first;
-        private final B second;
-
-        public Pair(A first, B second) {
-            super();
-            this.first = first;
-            this.second = second;
-        }
-
-        public A first() { return first; }
-        public B second() { return second; }
-
-        public String toString() {
-            return "(" + first + ", " + second + ")";
-        }
-    }
-
-    /** @return A pair where the first value is the minimum distance between p and q in S, and the second pair
-    // is itself a pair with the two p and q. */
-    private static Pair<Double, Pair<Vector, Vector>> distance(Vector p, List<Vector> S) {
-        double d_min = Double.MAX_VALUE;
-        Vector r = null;
-
-        for (Vector q : S) {
-            double d = Vectors.sqdist(p, q);
-
-            if (d < d_min) {
-                d_min = d;
-                r = q;
-            }
-        }
-
-        return new Pair<>(d_min, new Pair<>(p, r));
     }
 
     // AUX FUNCTIONS
