@@ -127,7 +127,7 @@ public class G49HW2 {
         List<Vector> inputSet = readVectorsSequence(filename);
 
         // Run and measure the algorithms.
-        if (args.length < 3 || args[2].equals("exact")) {
+        /*if (args.length < 3 || args[2].equals("exact")) {
             runExactMPD(inputSet);
             System.out.println();
         }
@@ -136,7 +136,7 @@ public class G49HW2 {
             runTwoApproxMPD(inputSet, k);
             System.out.println();
         }
-
+        */
         if (args.length < 3 || args[2].equals("kCenter")) {
             runKCenterMPD(inputSet, k);
         }
@@ -165,8 +165,9 @@ public class G49HW2 {
         Vector first = points.get(random);
         centers.add(first); // add to solution
         List<Pair<Vector, Pair<Vector, Double>>> distances = new LinkedList<>();
-        initializeDistances(first, S, distances); // initialize all point to have the first center as nearest center
-        Vector previousCenter = first;
+        // initialize all point to have the first center as nearest center
+        Vector previousCenter = initializeDistances(first, S, distances); // initialize all point-distance pairs and return the second center
+        centers.add(previousCenter);
         while (centers.size() < k) {
             Vector nextcenter = maximizeDistanceFromCenters(previousCenter, distances);
             centers.add(nextcenter);
@@ -176,14 +177,21 @@ public class G49HW2 {
         return centers;
     }
 
-    private static void initializeDistances(Vector firstCenter, List<Vector> S,
+    private static Vector initializeDistances(Vector firstCenter, List<Vector> S,
             List<Pair<Vector, Pair<Vector, Double>>> distances) {
+        Vector nextCenter = null;
+        double maxMinDistance = Double.MIN_VALUE;
         for (Vector p : S) {
             double dist = Vectors.sqdist(p, firstCenter);
             Pair<Vector, Double> centerDistance = new Pair(firstCenter, dist);
             Pair<Vector, Pair<Vector, Double>> pointCenterPair = new Pair(p, centerDistance);
             distances.add(pointCenterPair);
+            if (dist > maxMinDistance) {
+                maxMinDistance = dist;
+                nextCenter = p;
+            }
         }
+        return nextCenter;
     }
 
     private static Vector maximizeDistanceFromCenters(Vector currentCenter,
