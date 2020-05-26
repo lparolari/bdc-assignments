@@ -57,3 +57,8 @@ task runMaxPairwiseDistance(type:JavaExec){
     main = "it.unipd.bdc.ay2019.group49.hw.G49HW2"
     classpath = sourceSets.main.runtimeClasspath
 }
+
+task run4approx(type:JavaExec){
+    main = "it.unipd.bdc.ay2019.group49.hw.G49HW3"
+    classpath = sourceSets.main.runtimeClasspath
+}

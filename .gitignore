@@ -148,7 +148,7 @@ local.properties
 .settings/
 .loadpath
 .recommenders
-
+zalando.csv
 # External tool builders
 .externalToolBuilders/
 
