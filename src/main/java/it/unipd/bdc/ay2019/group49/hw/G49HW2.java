@@ -19,7 +19,7 @@ public class G49HW2 {
     // See [http://www.dei.unipd.it/~capri/BDC/homeworks.htm](http://www.dei.unipd.it/~capri/BDC/homeworks.htm)
     // and [http://www.dei.unipd.it/~capri/BDC/homework2.htm](http://www.dei.unipd.it/~capri/BDC/homework2.htm).
 
-    public static final long SEED = 1236601;  // my university id
+    public static final long SEED = 1236601; // my university id
 
     // HOMEWORK ALGORITHMS
     // ===================
@@ -55,7 +55,7 @@ public class G49HW2 {
         Running time = 2337
         */
 
-        double md = 0d;  // max distance between points, initially set to 0.
+        double md = 0d; // max distance between points, initially set to 0.
 
         for (int i = 0; i < S.size(); i++) {
             for (int j = i + 1; j < S.size(); j++) {
@@ -80,9 +80,7 @@ public class G49HW2 {
         Random generator = new Random(SEED);
 
         // Collect `k` random centers.
-        List<Vector> C = IntStream.range(0, k)
-                .map(i -> generator.nextInt(S.size()))
-                .mapToObj(S::get)
+        List<Vector> C = IntStream.range(0, k).map(i -> generator.nextInt(S.size())).mapToObj(S::get)
                 .collect(Collectors.toList());
 
         double md = 0d;
@@ -117,7 +115,7 @@ public class G49HW2 {
         //   args[0] = the dataset filename
         //   args[1] = an integer K
         //   args[2] = algorithm to run, optional
-        if (args.length < 2 || args.length > 3) {  // 2 or 3 parameters allowed
+        if (args.length < 2 || args.length > 3) { // 2 or 3 parameters allowed
             throw new IllegalArgumentException("USAGE: dataset_path k [{exact, 2approx, kCenter}]");
         }
 
@@ -150,10 +148,10 @@ public class G49HW2 {
     /** @return A list of k centers taken from S with farthest first traversal approach. */
     private static List<Vector> farthestFirstTraversal(List<Vector> S, Integer k) {
         @SuppressWarnings("UnnecessaryLocalVariable")
-        List<Vector> points = S;                   // rename
-        List<Vector> centers = new ArrayList<>();  // centers
+        List<Vector> points = S; // rename
+        List<Vector> centers = new ArrayList<>(); // centers
 
-        Random generator = new Random(SEED);  // the random generator
+        Random generator = new Random(SEED); // the random generator
 
         /*
         Note: in the pseudo-code of this algorithm, selected centers are removed from the point set (the `points`
@@ -163,33 +161,49 @@ public class G49HW2 {
         - the `remove(index)` method needs index management that can lead to errors and maintenance problems
         */
 
-        final int random = generator.nextInt(points.size());  // random first center
+        final int random = generator.nextInt(points.size()); // random first center
         Vector first = points.get(random);
-        centers.add(first);  // add to solution
-
+        centers.add(first); // add to solution
+        List<Pair<Vector, Pair<Vector, Double>>> distances = new LinkedList<>();
+        initializeDistances(first, S, distances); // initialize all point to have the first center as nearest center
+        Vector previousCenter = first;
         while (centers.size() < k) {
-            Vector p = maximizeDistanceFromCenters(centers, points);
-            centers.add(p);
+            Vector nextcenter = maximizeDistanceFromCenters(previousCenter, distances);
+            centers.add(nextcenter);
+            previousCenter = nextcenter;
         }
 
         return centers;
     }
 
-    /** @return A point from S that maximizes the `distance` function among all centers in C. */
-    private static Vector maximizeDistanceFromCenters(List<Vector> C, List<Vector> S) {
-        Vector r = null;  // farthest point from centers the nearest center
-        double max_d = Double.MIN_VALUE;
-
+    private static void initializeDistances(Vector firstCenter, List<Vector> S,
+            List<Pair<Vector, Pair<Vector, Double>>> distances) {
         for (Vector p : S) {
-            double d = distance(p, C).first();
+            double dist = Vectors.sqdist(p, firstCenter);
+            Pair<Vector, Double> centerDistance = new Pair(firstCenter, dist);
+            Pair<Vector, Pair<Vector, Double>> pointCenterPair = new Pair(p, centerDistance);
+            distances.add(pointCenterPair);
+        }
+    }
 
-            if (d > max_d) {
-                max_d = d;
-                r = p;
+    private static Vector maximizeDistanceFromCenters(Vector currentCenter,
+            List<Pair<Vector, Pair<Vector, Double>>> distances) {
+        double maxMinDistance = Double.MIN_VALUE;
+        Vector nextCenter = null;
+        for (Pair<Vector, Pair<Vector, Double>> point : distances) {
+            double distanceFromCurrentCenter = Vectors.sqdist(point.first(), currentCenter);
+            double currentDistance = point.second().second();
+            if (distanceFromCurrentCenter < currentDistance) { // update the current point's nearest center and distance, if smaller
+                point.second().setFirst(currentCenter);
+                point.second().setSecond(distanceFromCurrentCenter);
+            }
+            if (point.second().second() > maxMinDistance) { //update next center according to maximum-minimum distance
+                maxMinDistance = point.second().second();
+                nextCenter = point.first();
             }
         }
 
-        return r;
+        return nextCenter;
     }
 
     // DISTANCE AUX FUNCTIONS
@@ -197,8 +211,8 @@ public class G49HW2 {
 
     /** Generic pair class. */
     private static class Pair<A, B> {
-        private final A first;
-        private final B second;
+        private A first;
+        private B second;
 
         public Pair(A first, B second) {
             super();
@@ -206,30 +220,25 @@ public class G49HW2 {
             this.second = second;
         }
 
-        public A first() { return first; }
-        public B second() { return second; }
+        public A first() {
+            return first;
+        }
+
+        public B second() {
+            return second;
+        }
+
+        public void setFirst(A first) {
+            this.first = first;
+        }
+
+        public void setSecond(B second) {
+            this.second = second;
+        }
 
         public String toString() {
             return "(" + first + ", " + second + ")";
         }
-    }
-
-    /** @return A pair where the first value is the minimum distance between p and q in S, and the second pair
-    // is itself a pair with the two p and q. */
-    private static Pair<Double, Pair<Vector, Vector>> distance(Vector p, List<Vector> S) {
-        double d_min = Double.MAX_VALUE;
-        Vector r = null;
-
-        for (Vector q : S) {
-            double d = Vectors.sqdist(p, q);
-
-            if (d < d_min) {
-                d_min = d;
-                r = q;
-            }
-        }
-
-        return new Pair<>(d_min, new Pair<>(p, r));
     }
 
     // AUX FUNCTIONS
@@ -266,16 +275,15 @@ public class G49HW2 {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static void prettyPrint(String name, Double distance, Long runningTime, OptionalInt k) {
         System.out.println(name.toUpperCase());
-        if (k.isPresent()) System.out.println("k = " + k.getAsInt());
+        if (k.isPresent())
+            System.out.println("k = " + k.getAsInt());
         System.out.println("Max distance = " + distance);
         System.out.println("Running time = " + runningTime);
     }
 
     // Convert a comma separated string to a vector of double.
     private static Vector stringToVector(String str) {
-        double[] data = Arrays.stream(str.split(","))
-                .map(Double::parseDouble)
-                .mapToDouble(Double::doubleValue)
+        double[] data = Arrays.stream(str.split(",")).map(Double::parseDouble).mapToDouble(Double::doubleValue)
                 .toArray();
 
         return Vectors.dense(data);
@@ -287,8 +295,7 @@ public class G49HW2 {
             throw new IllegalArgumentException("readVectorsSeq is meant to read a single file.");
         }
 
-        return Files.lines(Paths.get(filename))
-                .map(G49HW2::stringToVector)
+        return Files.lines(Paths.get(filename)).map(G49HW2::stringToVector)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 }
