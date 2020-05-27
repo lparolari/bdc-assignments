@@ -168,19 +168,20 @@ public class G49HW2 {
         centers.add(first);  // add to solution
 
         // Maintain in memory the association between a point and the distance from its closest center.
-        // Map: point -> distance from its closest center.
-        HashMap<Vector, Double> cache = new HashMap<>();
+        HashMap<Vector, Double> distances = new HashMap<>();
 
-        // New center calculated on distance updates.
-        Vector newCenter = null;
+        Vector prevCenter = first;  // the selected center from the last iteration
+        Vector newCenter = null;    // the candidate center from this iteration
 
-        // Initialization: calculate all distances from first center and find the new center for the next iteration.
+        // Initialization: calculate all distances from prevCenter (i.e., the first center) and find the
+        // new center for the next iteration.
+
         // Complexity: O(S)
         {
             Double maxDistance = Double.MIN_VALUE;
             for (Vector p : points) {
-                Double distance = Vectors.sqdist(p, first);
-                cache.put(p, distance);
+                Double distance = Vectors.sqdist(p, prevCenter);
+                distances.put(p, distance);
                 if (distance > maxDistance) {
                     newCenter = p;
                     maxDistance = distance;
@@ -188,38 +189,49 @@ public class G49HW2 {
             }
         }
 
+        // Add the new center found to solution and set the new center as the old, so that newCenter can
+        // be rewritten with new candidates.
+        centers.add(newCenter);
+        prevCenter = newCenter;
+
         // Iteration: update distances from
-        // Complexity: O((k-1) * |S|)
+        // Complexity: O((k-2) * |S|)
         while (centers.size() < k) {
             Double maxDistance = Double.MIN_VALUE;
 
             for (Vector p : points) {
-                // get the distance between p and newCenter calculated from prev iteration
-                Double distance = Vectors.sqdist(p, newCenter);
+                // Get the distance between p and center calculated in prev iteration.
+                Double distance = Vectors.sqdist(p, prevCenter);
 
-                Double oldDistance = cache.get(p);  // distance calculated in previous iteration
+                Double oldDistance = distances.get(p);  // distance calculated in previous iteration
                 Double newDistance = oldDistance;   // default for new distance: leave the old unchanged
 
-                // update the distance if less than the old, i.e. the point p is closer to newCenter
+                // Update the distance if less than the old one, i.e. the point p is closer to the center
+                // selected in previous iteration. Then, update the distance for point p in distances map.
                 if (distance < oldDistance) {
                     newDistance = distance;
+                    distances.put(p, newDistance);  // update the distances
                 }
 
-                // update max distance if required, i.e., newDistance (can be really new or the old one) is
-                // greater that actual max distance
+                // Update the max distance if required, i.e., newDistance (can be really new or the old one) is
+                // greater that actual max distance, and memorize the point with this max distance as the candidate
+                // center for the next iteration.
                 if (newDistance > maxDistance) {
                     maxDistance = newDistance;
                     newCenter = p;
                 }
-
-                // update the cache
-                cache.put(p, newDistance);
             }
 
+            // Add the new center found to solution and set the new center as the old, so that newCenter can
+            // be rewritten with new candidates.
             centers.add(newCenter);
+            prevCenter = newCenter;
         }
 
-        // Total Complexity: O(|S| + ((k - 1) * |S|)) = O(k * |S|)
+        // Total Complexity
+        //   O(|S| + ((k - 2) * |S|))
+        // = O((k - 1) * |S|)
+        // = O(k * |S|)
 
         return centers;
     }
