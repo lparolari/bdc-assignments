@@ -134,6 +134,52 @@ and `hw2bench.sh` scripts that we made available in order to simplify this task.
 Please note that benchmarking was not the aim of this exercise. We took running times
 *one shot*, and we decided to leave benchmark results out of the source control.
 
+### HW3: Diversity Maximization
+
+**Execute locally**
+
+```shell script
+./gradlew runDiversityMaximization --args "\"src/main/resources/hw3/uber-small.csv\" 4 4"
+```
+
+**Execute on cloud**
+
+- Step 1: Build the shadow jar with
+```shell script
+./gradlew shadowJar
+```
+We suggest deleting the *build* dir before re-build the shadow jar.
+Please be sure to use Java 8 when compiling. You can check and fix versions with
+```shell script
+java -version
+javac -version
+
+sudo update-alternatives --config java
+sudo update-alternatives --config javac
+```
+
+- Step 2: Copy the fat jar to a machine in the unipd network (skip this step if you are under the unipd network).
+```shell script
+scp build/libs/bdc-assignments-all.jar torre.studenti.math.unipd.it:dev/bcd
+
+# or, if you don't have configured the connection with key pairs (password required)
+scp build/libs/bdc-assignments-all.jar username@torre.studenti.math.unipd.it:dev/bcd
+```
+
+- Step 3: Copy the jar to the cluster
+```shell script
+scp dev/bdc/bdc-assignments-all.jar group49@147.162.226.106:.
+```
+
+- Step 4: Run the job with Spark
+```shell script
+spark-submit \
+  --num-executors 4 \
+  --class it.unipd.bdc.ay2019.group49.hw.G49HW3\
+  bdc-assignments-all.jar\
+  /data/BDC1920/uber-small.csv 4 4
+```
+
 ## 👥 Authors
 
 **Luca Parolari**
