@@ -1,0 +1,3 @@
+# Ingnore zalando dataset as it is ~127 MB.
+# Use instead `wget http://www.dei.unipd.it/~capri/BDC/DATASETS/zalando.csv`
+zalando.csv
