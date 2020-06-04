@@ -19,21 +19,102 @@ import scala.Tuple2;
 public class G49HW3 {
 
     public static final long SEED = 1236601; // my university id
+    public static final SparkConf SPARK_CONF = new SparkConf(true)
+            .setAppName("Homework3")
+            .setMaster("local[*]");  // TODO: check if this is correct!.
+
+    private static final JavaSparkContext sc = buildContext(SPARK_CONF);
 
     public static void main(String[] args) throws IOException {
-        SparkConf conf = new SparkConf(true).setAppName("Homework1").setMaster("local[*]");
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        sc.setLogLevel("WARN");
+        // Step 1: SparkContext is initialized as a global variable.
 
+        // Step 2: Parse arguments, load dataset, adn print information.
+
+        // Parse arguments.
         String datasetPath = args[0];
         int L = Integer.parseInt(args[1]);
         int k = Integer.parseInt(args[2]);
 
-        JavaRDD<Vector> dataset = sc.textFile(datasetPath).map(G49HW3::stringToVector).repartition(L).cache();
-        System.out.println("average distance: " + measure(runMapReduce(k, L, datasetPath, sc)));
+        // Load the dataset and get running time.
+        long start = System.currentTimeMillis();
+        final JavaRDD<Vector> inputPoints = sc
+                .textFile(datasetPath)
+                .map(G49HW3::stringToVector)
+                .repartition(L)
+                .cache();  // materialize the rdd
+        long end = System.currentTimeMillis();
+        long runtime = end - start;
+
+        // Print information.
+        System.out.println("Number of points = " + inputPoints.count());
+        System.out.println("k = " + k);
+        System.out.println("L = " + L);
+        System.out.println("Initialization time = " + runtime);
+        System.out.println();
+
+        // Step 3: run the map reduce algorithm and print runtime of round 1 and round 2 (done in the function).
+        List<Vector> solution = runMapReduce(inputPoints, k, L);
+        System.out.println();
+
+        // Step 4: determine the average distance between points in solution.
+        System.out.println("Average distance = " + measure(solution));
     }
 
-    public static double measure(List<Vector> points) {
+    /**
+     * Partition P into L subsets and extract k points from each subset using the Farthest-First Traversal algorithm.
+     * Compute the final solution by running the 2-approximate sequential algorithm on the coreset of L*k points
+     * extracted from the L subsets.
+     *
+     * Print, as a side effect, running time of round 1 and round 2.
+     *
+     * @param pointsRDD The points, already partitioned in L subset.
+     * @param k The number of centers to select.
+     * @param L The number of partitions for `pointsRDD`.
+     * @return A list of k solution points computed by the sequential 2-approximation algorithm
+     * for diversity maximization.
+     */
+    public static List<Vector> runMapReduce(final JavaRDD<Vector> pointsRDD, final int k, final int L) {
+        long start, end, runtime;
+
+        // .repartition(L) not needed as it hal already been done.
+
+        // Round 1
+        start = System.currentTimeMillis();
+        JavaRDD<Vector> centersSubset = pointsRDD
+                // Extracts k points from each partition using the Farthest-First Traversal algorithm.
+                .glom()
+                .mapPartitions((points) -> {
+                    List<Vector> S = points.next();
+                    List<Vector> centers = farthestFirstTraversal(S, k);
+                    return centers.iterator();
+                });
+        long c = centersSubset.count();  // materialize the RDD
+        end = System.currentTimeMillis();
+        runtime = end - start;
+
+        if (c != k * L)
+            throw new AssertionError("Coreset size is not k*L");
+
+        System.out.println("Runtime of Round 1 = " + runtime);
+
+        // Round 2
+        start = System.currentTimeMillis();
+        List<Vector> coreset = centersSubset.collect();    // collects the L*k points
+        List<Vector> centers = runSequential(coreset, k);  // execute 2-approx algorithm
+        end = System.currentTimeMillis();
+        runtime = end - start;
+
+        System.out.println("Runtime of Round 2 = " + runtime);
+
+        return centers;
+    }
+
+    /**
+     * Computes the average distance between all pairs of points.
+     * @param points A list of vector representing points.
+     * @return The average distance between points in `points`.
+     */
+    public static double measure(final List<Vector> points) {
         double sum = 0;
         for (int i = 0; i < points.size(); i++) {
             for (int j = i + 1; j < points.size(); j++)
@@ -43,17 +124,12 @@ public class G49HW3 {
         return sum / size;
     }
 
-    public static List<Vector> runMapReduce(int k, int L, String datasetPath, JavaSparkContext sc) {
-        JavaRDD<Vector> dataset = sc.textFile(datasetPath).map(G49HW3::stringToVector).repartition(L).cache();
-        List<Vector> res = dataset.glom().mapPartitions((points) -> {
-            List<Vector> S = points.next();
-            List<Vector> centers = farthestFirstTraversal(S, k);
-            return centers.iterator();
-        }).collect();
-        return runSequential(res, k);
-
-    }
-
+    /**
+     * Run the sequential 2-approximation algorithm for diversity maximization.
+     * @param points The points dataset.
+     * @param k The number of points to select.
+     * @return A list of k selected points.
+     */
     public static List<Vector> runSequential(final List<Vector> points, int k) {
 
         final int n = points.size();
@@ -107,11 +183,14 @@ public class G49HW3 {
 
     } // END runSequential
 
-    /** @return A list of k centers taken from S with farthest first traversal approach. */
-    private static List<Vector> farthestFirstTraversal(List<Vector> S, Integer k) {
+    /**
+     * Farthest first traversal algorithm.
+     * @return A list of k centers taken from S with farthest first traversal approach.
+     */
+    private static List<Vector> farthestFirstTraversal(final List<Vector> S, final Integer k) {
         @SuppressWarnings("UnnecessaryLocalVariable")
-        List<Vector> points = S; // rename
-        List<Vector> centers = new ArrayList<>(); // centers
+        List<Vector> points = S;                   // rename
+        List<Vector> centers = new ArrayList<>();  // centers
 
         Random generator = new Random(SEED); // the random generator
 
@@ -145,8 +224,8 @@ public class G49HW3 {
         double maxMinDistance = Double.MIN_VALUE;
         for (Vector p : S) {
             double dist = Vectors.sqdist(p, firstCenter);
-            Pair<Vector, Double> centerDistance = new Pair(firstCenter, dist);
-            Pair<Vector, Pair<Vector, Double>> pointCenterPair = new Pair(p, centerDistance);
+            Pair<Vector, Double> centerDistance = new Pair<>(firstCenter, dist);
+            Pair<Vector, Pair<Vector, Double>> pointCenterPair = new Pair<>(p, centerDistance);
             distances.add(pointCenterPair);
             if (dist > maxMinDistance) {
                 maxMinDistance = dist;
@@ -174,6 +253,14 @@ public class G49HW3 {
         }
 
         return nextCenter;
+    }
+
+    /** Build a JavaSparkContext object with given configurations. */
+    private static JavaSparkContext buildContext(SparkConf conf) {
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        sc.setLogLevel("WARN");
+
+        return sc;
     }
 
     private static class Pair<A, B> {
