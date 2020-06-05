@@ -1,3 +1,4 @@
+package it.unipd.bdc.ay2019.group49.hw;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;

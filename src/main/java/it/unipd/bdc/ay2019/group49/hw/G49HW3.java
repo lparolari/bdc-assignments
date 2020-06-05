@@ -4,24 +4,25 @@ import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import scala.Tuple2;
 
 public class G49HW3 {
+
+    // Group 49: Luca Parolari, Giulio Piva
+    // Homework 2, Big Data Computing
+    // Assigned: 25/05/20, Deadline: 17/06/20
+
+    // See [http://www.dei.unipd.it/~capri/BDC/homeworks.htm](http://www.dei.unipd.it/~capri/BDC/homeworks.htm)
+    // and [http://www.dei.unipd.it/~capri/BDC/homework3.htm](http://www.dei.unipd.it/~capri/BDC/homework3.htm).
 
     public static final long SEED = 1236601; // my university id
     public static final SparkConf SPARK_CONF = new SparkConf(true)
             .setAppName("Homework3")
-            .setMaster("local[*]");  // TODO: check if this is correct!.
+            .setMaster("local[*]");  // TODO: check if this is correct!
 
     private static final JavaSparkContext sc = buildContext(SPARK_CONF);
 
@@ -219,7 +220,7 @@ public class G49HW3 {
     }
 
     private static Vector initializeDistances(Vector firstCenter, List<Vector> S,
-            List<Pair<Vector, Pair<Vector, Double>>> distances) {
+                                              List<Pair<Vector, Pair<Vector, Double>>> distances) {
         Vector nextCenter = null;
         double maxMinDistance = Double.MIN_VALUE;
         for (Vector p : S) {
@@ -236,7 +237,7 @@ public class G49HW3 {
     }
 
     private static Vector maximizeDistanceFromCenters(Vector currentCenter,
-            List<Pair<Vector, Pair<Vector, Double>>> distances) {
+                                                      List<Pair<Vector, Pair<Vector, Double>>> distances) {
         double maxMinDistance = Double.MIN_VALUE;
         Vector nextCenter = null;
         for (Pair<Vector, Pair<Vector, Double>> point : distances) {
