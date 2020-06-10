@@ -21,8 +21,7 @@ public class G49HW3 {
 
     public static final long SEED = 1236601; // my university id
     public static final SparkConf SPARK_CONF = new SparkConf(true)
-            .setAppName("Homework3")
-            .setMaster("local[*]");  // TODO: check if this is correct!
+            .setAppName("Homework3");
 
     private static final JavaSparkContext sc = buildContext(SPARK_CONF);
 
@@ -236,6 +235,7 @@ public class G49HW3 {
         return nextCenter;
     }
 
+    @SuppressWarnings("Duplicates")
     private static Vector maximizeDistanceFromCenters(Vector currentCenter,
                                                       List<Pair<Vector, Pair<Vector, Double>>> distances) {
         double maxMinDistance = Double.MIN_VALUE;
