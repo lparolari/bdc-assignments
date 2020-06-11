@@ -160,10 +160,10 @@ sudo update-alternatives --config javac
 
 - Step 2: Copy the fat jar to a machine in the unipd network (skip this step if you are under the unipd network).
 ```shell script
-scp build/libs/bdc-assignments-all.jar torre.studenti.math.unipd.it:dev/bcd
+scp build/libs/bdc-assignments-all.jar torre.studenti.math.unipd.it:dev/bdc
 
 # or, if you don't have configured the connection with key pairs (password required)
-scp build/libs/bdc-assignments-all.jar username@torre.studenti.math.unipd.it:dev/bcd
+scp build/libs/bdc-assignments-all.jar username@torre.studenti.math.unipd.it:dev/bdc
 ```
 
 - Step 3: Copy the jar to the cluster
