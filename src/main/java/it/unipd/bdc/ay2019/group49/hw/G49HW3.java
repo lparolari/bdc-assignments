@@ -3,7 +3,6 @@ package it.unipd.bdc.ay2019.group49.hw;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 
-import java.io.IOException;
 import java.util.*;
 
 import org.apache.spark.SparkConf;
@@ -25,15 +24,15 @@ public class G49HW3 {
 
     private static final JavaSparkContext sc = buildContext(SPARK_CONF);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         // Step 1: SparkContext is initialized as a global variable.
 
         // Step 2: Parse arguments, load dataset, adn print information.
 
         // Parse arguments.
         String datasetPath = args[0];
-        int L = Integer.parseInt(args[1]);
-        int k = Integer.parseInt(args[2]);
+        int k = Integer.parseInt(args[1]);
+        int L = Integer.parseInt(args[2]);
 
         // Load the dataset and get running time.
         long start = System.currentTimeMillis();
@@ -187,6 +186,7 @@ public class G49HW3 {
      * Farthest first traversal algorithm.
      * @return A list of k centers taken from S with farthest first traversal approach.
      */
+    @SuppressWarnings("Duplicates")
     private static List<Vector> farthestFirstTraversal(final List<Vector> S, final Integer k) {
         @SuppressWarnings("UnnecessaryLocalVariable")
         List<Vector> points = S;                   // rename
@@ -257,6 +257,7 @@ public class G49HW3 {
     }
 
     /** Build a JavaSparkContext object with given configurations. */
+    @SuppressWarnings("SameParameterValue")
     private static JavaSparkContext buildContext(SparkConf conf) {
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.setLogLevel("WARN");
