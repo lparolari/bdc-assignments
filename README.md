@@ -139,7 +139,11 @@ Please note that benchmarking was not the aim of this exercise. We took running 
 **Execute locally**
 
 ```shell script
-./gradlew runDiversityMaximization --args "\"src/main/resources/hw3/uber-small.csv\" 4 4"
+./gradlew runDiversityMaximization --args "path/to/dataset K L"
+```
+for example with K=100 and L=16
+```shell script
+./gradlew runDiversityMaximization --args "\"src/main/resources/hw3/uber-small.csv\" 100 16"
 ```
 
 **Execute on cloud**
