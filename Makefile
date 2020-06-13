@@ -1,6 +1,7 @@
 hw3: hw3_compile hw3_upload
 
 hw3_compile:
+	rm -rf build
 	./gradlew shadowJar
 
 hw3_upload:
