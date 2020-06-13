@@ -19,13 +19,10 @@ public class G49HW3 {
     // and [http://www.dei.unipd.it/~capri/BDC/homework3.htm](http://www.dei.unipd.it/~capri/BDC/homework3.htm).
 
     public static final long SEED = 1236601; // my university id
-    public static final SparkConf SPARK_CONF = new SparkConf(true)
-            .setAppName("Homework3");
-
-    private static final JavaSparkContext sc = buildContext(SPARK_CONF);
 
     public static void main(String[] args) {
-        // Step 1: SparkContext is initialized as a global variable.
+        // Step 1: Build SparkContext.
+        JavaSparkContext sc = buildContext(new SparkConf(true).setAppName("Homework3"));
 
         // Step 2: Parse arguments, load dataset, adn print information.
 
@@ -258,7 +255,6 @@ public class G49HW3 {
     }
 
     /** Build a JavaSparkContext object with given configurations. */
-    @SuppressWarnings("SameParameterValue")
     private static JavaSparkContext buildContext(SparkConf conf) {
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.setLogLevel("WARN");
