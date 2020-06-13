@@ -40,12 +40,13 @@ public class G49HW3 {
                 .textFile(datasetPath)
                 .map(G49HW3::stringToVector)
                 .repartition(L)
-                .cache();  // materialize the rdd
+                .cache();
+        long c = inputPoints.count();  // call an action to materialize the rdd
         long end = System.currentTimeMillis();
         long runtime = end - start;
 
         // Print information.
-        System.out.println("Number of points = " + inputPoints.count());
+        System.out.println("Number of points = " + c);
         System.out.println("k = " + k);
         System.out.println("L = " + L);
         System.out.println("Initialization time = " + runtime);
@@ -87,7 +88,7 @@ public class G49HW3 {
                     List<Vector> centers = farthestFirstTraversal(S, k);
                     return centers.iterator();
                 });
-        long c = centersSubset.count();  // materialize the RDD
+        long c = centersSubset.count();  // call an action to materialize the rdd
         end = System.currentTimeMillis();
         runtime = end - start;
 
