@@ -1,5 +1,6 @@
 package it.unipd.bdc.ay2019.group49.hw;
 
+import com.google.common.collect.Lists;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 
@@ -71,20 +72,21 @@ public class G49HW3 {
      * for diversity maximization.
      */
     public static List<Vector> runMapReduce(final JavaRDD<Vector> pointsRDD, final int k, final int L) {
-        long start, end, runtime;
+        long start, end, runtime;  // variable for measuring running times
 
-        // .repartition(L) not needed as it hal already been done.
+        // pointsRDD.repartition(L) is not needed because it has already been 7
+        // done in the initialization phase.
 
         // Round 1
         start = System.currentTimeMillis();
         JavaRDD<Vector> centersSubset = pointsRDD
                 // Extracts k points from each partition using the Farthest-First Traversal algorithm.
-                .glom()
-                .mapPartitions((points) -> {
-                    List<Vector> S = points.next();
-                    List<Vector> centers = farthestFirstTraversal(S, k);
+                .mapPartitions((pointsIterator) -> {
+                    List<Vector> points = Lists.newArrayList(pointsIterator);  // iterator to list of points
+                    List<Vector> centers = farthestFirstTraversal(points, k);
                     return centers.iterator();
-                });
+                })
+                .cache();
         long c = centersSubset.count();  // call an action to materialize the rdd
         end = System.currentTimeMillis();
         runtime = end - start;
